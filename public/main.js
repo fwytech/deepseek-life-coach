@@ -106,13 +106,75 @@ function updateAiMessage(content) {
     msgDiv.className = 'message ai';
     const bubble = document.createElement('div');
     bubble.className = 'bubble ai';
-    bubble.textContent = content;
+    
+    // 创建消息内容容器
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    contentDiv.textContent = content;
+    
+    // 创建消息分析容器
+    const analysisDiv = document.createElement('div');
+    analysisDiv.className = 'message-analysis';
+    
+    // 提取关键词（简单实现，实际项目中可以使用更复杂的算法）
+    const keywords = extractKeywords(content);
+    if (keywords.length > 0) {
+      const keywordSpan = document.createElement('span');
+      keywordSpan.className = 'keywords';
+      keywordSpan.textContent = '关键词：' + keywords.join('、');
+      analysisDiv.appendChild(keywordSpan);
+    }
+    
+    // 分析情感倾向（简单实现）
+    const sentiment = analyzeSentiment(content);
+    const sentimentSpan = document.createElement('span');
+    sentimentSpan.className = 'sentiment ' + sentiment;
+    sentimentSpan.textContent = getSentimentText(sentiment);
+    analysisDiv.appendChild(sentimentSpan);
+    
+    bubble.appendChild(contentDiv);
+    bubble.appendChild(analysisDiv);
     msgDiv.appendChild(bubble);
     chatContainer.appendChild(msgDiv);
   } else {
-    lastMsg.textContent = content;
+    const contentDiv = lastMsg.querySelector('.message-content') || lastMsg;
+    contentDiv.textContent = content;
   }
   chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// 提取关键词（简单实现）
+function extractKeywords(text) {
+  const stopWords = new Set(['的', '了', '和', '是', '在', '我', '你', '他', '她', '它', '这', '那', '都']);
+  const words = text.split(/\s+|[,。！？、]/).filter(word => 
+    word.length >= 2 && !stopWords.has(word)
+  );
+  return [...new Set(words)].slice(0, 3); // 返回前3个不重复的关键词
+}
+
+// 分析情感倾向（简单实现）
+function analyzeSentiment(text) {
+  const positiveWords = ['好', '棒', '优秀', '感谢', '喜欢', '开心', '希望'];
+  const negativeWords = ['差', '糟', '失败', '抱歉', '问题', '错误', '难过'];
+  
+  let score = 0;
+  positiveWords.forEach(word => {
+    if (text.includes(word)) score++;
+  });
+  negativeWords.forEach(word => {
+    if (text.includes(word)) score--;
+  });
+  
+  return score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral';
+}
+
+// 获取情感文本
+function getSentimentText(sentiment) {
+  switch (sentiment) {
+    case 'positive': return '😊 积极';
+    case 'negative': return '😔 消极';
+    default: return '😐 中性';
+  }
 }
 
 // 最终确定 AI 消息内容
