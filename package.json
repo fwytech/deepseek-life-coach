@@ -1,0 +1,19 @@
+{
+  "name": "trae-five",
+  "version": "1.1.0",
+  "description": "本项目是一个基于 HTML5、CSS 和 Node.js 的网页应用，旨在通过火山方舟 DeepSeek R1 API 实现与 AI 的对话，帮助用户成长为更好的自己，成为你的 life coach。",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2"
+  }
+}
