@@ -28,9 +28,21 @@ function renderMessages() {
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
+// 控制AI思考状态显示
+function showThinking() {
+  const thinking = document.getElementById('ai-thinking');
+  thinking.classList.add('visible');
+}
+
+function hideThinking() {
+  const thinking = document.getElementById('ai-thinking');
+  thinking.classList.remove('visible');
+}
+
 // 发送消息到后端
 async function sendMessageToServer(userMsg) {
   try {
+    showThinking(); // 显示AI思考状态
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -93,6 +105,8 @@ async function sendMessageToServer(userMsg) {
   } catch (err) {
     console.error('AI 回复错误:', err);
     finalizeAiMessage(`AI 回复失败: ${err.message}`);
+  } finally {
+    hideThinking(); // 隐藏AI思考状态
   }
 }
 
