@@ -15,9 +15,19 @@ app.use(express.json({ limit: '2mb' }));
 // 提供静态文件服务
 app.use(express.static('public'));
 
-// API KEY 和 DeepSeek R1 API 地址
-const API_KEY = '3c2d78ae-41b3-41cb-82b1-89d19063591a';
-const API_URL = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
+// 导入dotenv配置环境变量
+import dotenv from 'dotenv';
+dotenv.config();
+
+// 从环境变量获取API配置
+const API_KEY = process.env.API_KEY;
+const API_URL = process.env.API_URL;
+
+// 验证环境变量
+if (!API_KEY || !API_URL) {
+  console.error('错误：缺少必要的环境变量配置。请确保已设置 API_KEY 和 API_URL。');
+  process.exit(1);
+}
 
 // 处理前端 /api/chat 请求
 app.post('/api/chat', async (req, res) => {

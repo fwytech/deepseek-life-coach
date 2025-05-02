@@ -33,7 +33,7 @@ body {
 }
 
 /* AI思考状态指示器 */
-.ai-thinking {
+.thinking-indicator {
   display: none;
   position: fixed;
   bottom: 100px;
@@ -44,11 +44,11 @@ body {
   border-radius: 20px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   z-index: 1000;
+  align-items: center;
 }
 
-.ai-thinking.visible {
+.thinking-indicator.visible {
   display: flex;
-  align-items: center;
   animation: slideUp 0.3s ease-out forwards;
 }
 

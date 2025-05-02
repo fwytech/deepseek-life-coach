@@ -28,21 +28,56 @@ function renderMessages() {
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-// 控制AI思考状态显示
-function showThinking() {
-  const thinking = document.getElementById('ai-thinking');
-  thinking.classList.add('visible');
-}
 
-function hideThinking() {
-  const thinking = document.getElementById('ai-thinking');
-  thinking.classList.remove('visible');
-}
 
 // 发送消息到后端
+// 显示AI思考状态
+function showThinkingIndicator() {
+  const indicator = document.getElementById('thinking-indicator');
+  indicator.style.display = 'flex';
+  setTimeout(() => indicator.classList.add('visible'), 10);
+}
+
+// 隐藏AI思考状态
+function hideThinkingIndicator() {
+  const indicator = document.getElementById('thinking-indicator');
+  indicator.classList.remove('visible');
+  setTimeout(() => indicator.style.display = 'none', 300);
+}
+
+// 分析消息情感
+function analyzeSentiment(text) {
+  const positiveWords = ['开心', '快乐', '好', '棒', '优秀', '喜欢', '感谢', '希望'];
+  const negativeWords = ['难过', '伤心', '不好', '糟糕', '讨厌', '失望', '焦虑'];
+  
+  let positiveCount = 0;
+  let negativeCount = 0;
+  
+  positiveWords.forEach(word => {
+    if (text.includes(word)) positiveCount++;
+  });
+  
+  negativeWords.forEach(word => {
+    if (text.includes(word)) negativeCount++;
+  });
+  
+  if (positiveCount > negativeCount) return 'positive';
+  if (negativeCount > positiveCount) return 'negative';
+  return 'neutral';
+}
+
+// 提取关键词
+function extractKeywords(text) {
+  const stopWords = ['的', '了', '是', '在', '我', '有', '和', '就', '不', '人', '都', '一', '一个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这'];
+  const words = text.split(/\s+|[,。！？，.!?]/).filter(word => word.length > 0);
+  const keywords = words.filter(word => !stopWords.includes(word));
+  return keywords.slice(0, 3).join(', ');
+}
+
 async function sendMessageToServer(userMsg) {
   try {
-    showThinking(); // 显示AI思考状态
+    showThinkingIndicator();
+
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -106,12 +141,16 @@ async function sendMessageToServer(userMsg) {
     console.error('AI 回复错误:', err);
     finalizeAiMessage(`AI 回复失败: ${err.message}`);
   } finally {
-    hideThinking(); // 隐藏AI思考状态
+    hideThinkingIndicator();
   }
 }
 
 // 实时更新 AI 消息气泡
 function updateAiMessage(content) {
+  // 分析消息情感和关键词
+  const sentiment = analyzeSentiment(content);
+  const keywords = extractKeywords(content);
+
   // 查找最后一条 AI 消息气泡
   let lastMsg = chatContainer.querySelector('.message.ai:last-child .bubble');
   if (!lastMsg) {
@@ -121,75 +160,40 @@ function updateAiMessage(content) {
     const bubble = document.createElement('div');
     bubble.className = 'bubble ai';
     
-    // 创建消息内容容器
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content';
-    contentDiv.textContent = content;
-    
-    // 创建消息分析容器
-    const analysisDiv = document.createElement('div');
-    analysisDiv.className = 'message-analysis';
-    
-    // 提取关键词（简单实现，实际项目中可以使用更复杂的算法）
-    const keywords = extractKeywords(content);
-    if (keywords.length > 0) {
-      const keywordSpan = document.createElement('span');
-      keywordSpan.className = 'keywords';
-      keywordSpan.textContent = '关键词：' + keywords.join('、');
-      analysisDiv.appendChild(keywordSpan);
-    }
-    
-    // 分析情感倾向（简单实现）
-    const sentiment = analyzeSentiment(content);
-    const sentimentSpan = document.createElement('span');
-    sentimentSpan.className = 'sentiment ' + sentiment;
-    sentimentSpan.textContent = getSentimentText(sentiment);
-    analysisDiv.appendChild(sentimentSpan);
-    
-    bubble.appendChild(contentDiv);
-    bubble.appendChild(analysisDiv);
+    const messageContent = document.createElement('div');
+    messageContent.className = 'message-content';
+    messageContent.textContent = content;
+    bubble.appendChild(messageContent);
+
+    const messageAnalysis = document.createElement('div');
+    messageAnalysis.className = 'message-analysis';
+    messageAnalysis.innerHTML = `
+      <div class="keywords">${keywords}</div>
+      <div class="sentiment ${sentiment}">${sentiment === 'positive' ? '积极' : sentiment === 'negative' ? '消极' : '中性'}</div>
+    `;
+    bubble.appendChild(messageAnalysis);
     msgDiv.appendChild(bubble);
     chatContainer.appendChild(msgDiv);
   } else {
-    const contentDiv = lastMsg.querySelector('.message-content') || lastMsg;
-    contentDiv.textContent = content;
+    const messageContent = lastMsg.querySelector('.message-content') || lastMsg;
+    messageContent.textContent = content;
+    
+    // 更新分析结果
+    let messageAnalysis = lastMsg.querySelector('.message-analysis');
+    if (!messageAnalysis) {
+      messageAnalysis = document.createElement('div');
+      messageAnalysis.className = 'message-analysis';
+      lastMsg.appendChild(messageAnalysis);
+    }
+    messageAnalysis.innerHTML = `
+      <div class="keywords">${keywords}</div>
+      <div class="sentiment ${sentiment}">${sentiment === 'positive' ? '积极' : sentiment === 'negative' ? '消极' : '中性'}</div>
+    `;
   }
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-// 提取关键词（简单实现）
-function extractKeywords(text) {
-  const stopWords = new Set(['的', '了', '和', '是', '在', '我', '你', '他', '她', '它', '这', '那', '都']);
-  const words = text.split(/\s+|[,。！？、]/).filter(word => 
-    word.length >= 2 && !stopWords.has(word)
-  );
-  return [...new Set(words)].slice(0, 3); // 返回前3个不重复的关键词
-}
 
-// 分析情感倾向（简单实现）
-function analyzeSentiment(text) {
-  const positiveWords = ['好', '棒', '优秀', '感谢', '喜欢', '开心', '希望'];
-  const negativeWords = ['差', '糟', '失败', '抱歉', '问题', '错误', '难过'];
-  
-  let score = 0;
-  positiveWords.forEach(word => {
-    if (text.includes(word)) score++;
-  });
-  negativeWords.forEach(word => {
-    if (text.includes(word)) score--;
-  });
-  
-  return score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral';
-}
-
-// 获取情感文本
-function getSentimentText(sentiment) {
-  switch (sentiment) {
-    case 'positive': return '😊 积极';
-    case 'negative': return '😔 消极';
-    default: return '😐 中性';
-  }
-}
 
 // 最终确定 AI 消息内容
 function finalizeAiMessage(content) {
